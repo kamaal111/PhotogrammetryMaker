@@ -70,15 +70,15 @@ struct PhotogrammetryMaker {
                 }
             })
             .store(in: &subscriptions)
-        let outPutURL = rootURL.appendingPathComponent("NewObject.usdz")
-        if let maybeError = processPhotogrammetrySession(session: photogrammetrySession, outPutURL: outPutURL) {
+        let outputURL = rootURL.appendingPathComponent("NewObject.usdz")
+        if let maybeError = processPhotogrammetrySession(session: photogrammetrySession, outputURL: outputURL) {
             print(maybeError)
             Foundation.exit(1)
         }
     }
 
-    private func processPhotogrammetrySession(session: PhotogrammetrySession, outPutURL: URL) -> Errors? {
-        let request = PhotogrammetrySession.Request.modelFile(url: outPutURL, detail: .full)
+    private func processPhotogrammetrySession(session: PhotogrammetrySession, outputURL: URL) -> Errors? {
+        let request = PhotogrammetrySession.Request.modelFile(url: outputURL, detail: .full)
         do {
             try session.process(requests: [request])
         } catch {
