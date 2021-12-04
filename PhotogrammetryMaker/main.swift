@@ -26,54 +26,45 @@ struct PhotogrammetryMaker {
             Foundation.exit(1)
         case .success(let success): photogrammetrySession = success
         }
-        var subscriptions = Set<AnyCancellable>()
-        photogrammetrySession.output
-            .receive(on: DispatchQueue.global())
-            .sink(receiveCompletion: { completion in
-                switch completion {
-                case .failure(let failure):
-                    print(failure)
-                    Foundation.exit(1)
-                case .finished: break
+
+        Task {
+            do {
+                for try await output in photogrammetrySession.outputs {
+                    switch output {
+                    case .processingComplete: print("processingComplete")
+                    case .requestComplete(let request, let result):
+                        print(request)
+                        print(result)
+                        print("requestComplete")
+                    case .inputComplete:
+                        print("inputComplete")
+                    case .requestError(let request, let error):
+                        print(request)
+                        print(error)
+                        print("requestError")
+                    case .requestProgress(let request, fractionComplete: let fractionComplete):
+                        print(request)
+                        print(fractionComplete)
+                        print("requestProgress")
+                    case .processingCancelled:
+                        print("processingCancelled")
+                    case .invalidSample(id: let id, reason: let reason):
+                        print(id)
+                        print(reason)
+                        print("invalidSample")
+                    case .skippedSample(id: let id):
+                        print(id)
+                        print("skippedSample")
+                    case .automaticDownsampling:
+                        print("automaticDownsampling")
+                    @unknown default:
+                        print("unknown case")
+                        print(output)
+                    }
                 }
-            }, receiveValue: { output in
-                switch output {
-                case .processingComplete: print("processingComplete")
-                case .requestComplete(let request, let result):
-                    print(request)
-                    print(result)
-                    print("requestComplete")
-                case .inputComplete:
-                    print("inputComplete")
-                case .requestError(let request, let error):
-                    print(request)
-                    print(error)
-                    print("requestError")
-                case .requestProgress(let request, fractionComplete: let fractionComplete):
-                    print(request)
-                    print(fractionComplete)
-                    print("requestProgress")
-                case .processingCancelled:
-                    print("processingCancelled")
-                case .invalidSample(id: let id, reason: let reason):
-                    print(id)
-                    print(reason)
-                    print("invalidSample")
-                case .skippedSample(id: let id):
-                    print(id)
-                    print("skippedSample")
-                case .automaticDownsampling:
-                    print("automaticDownsampling")
-                @unknown default:
-                    print("unknown case")
-                    print(output)
-                }
-            })
-            .store(in: &subscriptions)
-        let outputURL = rootURL.appendingPathComponent("NewObject.usdz")
-        if let maybeError = processPhotogrammetrySession(session: photogrammetrySession, outputURL: outputURL) {
-            print(maybeError)
-            Foundation.exit(1)
+            } catch {
+                print(error)
+            }
         }
     }
 
